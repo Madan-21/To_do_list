@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced To-Do List</title>
+    <style>
+        :root {
+            --bg-color: #fff5e6;
+            --text-color: #333;
+            --item-bg: #fff;
+            --item-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --primary-color: #FF9800;
+            /* Orange */
+            --secondary-color: #E91E63;
+            /* Pink */
+            --danger-color: #ff4444;
+            --gradient-bg: linear-gradient(135deg, #FFECB3, #F8BBD0);
+            /* Orange to Pink */
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #eee;
+            --item-bg: #1e1e1e;
+            --item-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            --gradient-bg: linear-gradient(135deg, #424242, #303030);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--gradient-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* Center content vertically */
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #FF9800, #E91E63);
+            /* Orange to Pink */
+            color: white;
+            width: 100%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 10px 10px;
+            /* Rounded bottom corners */
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 25px;
+            background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
+            /* Light Orange to Light Pink */
+            /* Rounded corners */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            /* Add shadow for depth */
+        }
+
+        .input-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            /* Center inputs */
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            /* Rounded corners */
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow */
+        }
+
+        button {
+            background: linear-gradient(135deg, #FF9800, #E91E63);
+            /* Orange to Pink */
+            color: white;
+            cursor: pointer;
+            border: none;
+            /* Remove border */
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #E91E63, #FF5722);
+            /* Pink to Darker Orange */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            /* Add shadow on hover */
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
+            /* Light Orange to Light Pink */
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            /* Rounded corners */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Add shadow */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            /* Add shadow on hover */
+        }
+
+        .task-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-timer {
+            font-size: 14px;
+            color: var(--primary-color);
+            margin-top: 5px;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+        }
+
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .edit-btn {
+            background-color: var(--secondary-color);
+        }
+
+        .edit-btn:hover {
+            background-color: #7b1fa2;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9800, #E91E63);
+            color: white;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .theme-toggle:hover {
+            background: linear-gradient(135deg, #E91E63, #FF5722);
+            transform: scale(1.1);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+            font-size: 16px;
+            /* Slightly larger font */
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .start-btn {
+            background-color: var(--primary-color);
+        }
+
+        .start-btn:hover {
+            background-color: #45a049;
+        }
+
+        .stop-btn {
+            background-color: var(--danger-color);
+        }
+
+        .stop-btn:hover {
+            background-color: #cc0000;
+        }
+
+        #taskHistory {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
+            /* Light Orange to Light Pink */
+            /* Rounded corners */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            /* Add shadow */
+        }
+
+        #taskHistory h2 {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+            /* Center align */
+        }
+
+        /* Add styling for the reminder label and scheduled time display */
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .scheduled-time {
+            font-size: 14px;
+            color: var(--secondary-color);
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #FF9800, #E91E63);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
+                border: 1px solid #FFB74D;
+            }
+
+            .input-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            input,
+            select,
+            button {
+                width: 100%;
+                font-size: 18px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            ul {
+                padding: 0;
+            }
+
+            li {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+                background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
+            }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 4px;
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
+
+            h1 {
+                font-size: 20px;
+                padding: 15px;
+                background: linear-gradient(135deg, #FF9800, #E91E63);
+                color: white;
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            }
+
+            #currentDate {
+                font-size: 14px;
+                text-align: center;
+            }
+
+            .empty-state {
+                font-size: 16px;
+                color: #aaa;
+            }
+
+            button {
+                margin-bottom: 10px;
+                border: none;
+                background: linear-gradient(135deg, #FF9800, #E91E63);
+            }
+
+            button:hover {
+                background: linear-gradient(135deg, #E91E63, #FF5722);
+                transform: scale(1.05);
+            }
+
+            #taskHistory {
+                margin-top: 20px;
+                padding: 20px;
+                background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
+                border: 1px solid #F8BBD0;
+            }
+
+            #taskHistory h2 {
+                font-size: 18px;
+                color: #333;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Enhanced To-Do List</h1>
+    <p id="currentDate"></p>
+    <div class="container">
+        <div class="input-section">
+            <label class="input-label" for="taskInput">Task</label>
+            <input type="text" id="taskInput" placeholder="Enter a task">
+
+            <label class="input-label" for="categoryInput">Category</label>
+            <select id="categoryInput">
+                <option value="">No Category</option>
+                <option value="work">Work</option>
+                <option value="personal">Personal</option>
+                <option value="learning">Learning</option>
+                <option value="exercise">Exercise</option>
+            </select>
+
+            <label class="input-label" for="reminderInput">Schedule Time</label>
+            <input type="datetime-local" id="reminderInput">
+
+            <button onclick="addTask()">Add Task</button>
+            <button onclick="addLearningSchedule()">Add Learning Schedule</button>
+            <button onclick="addClassSchedule()">Add Class Schedule</button>
+            <button onclick="addMoreTasksToBothSections()">Add Task to Both Sections</button>
+            <button onclick="switchToLearningSchedule()">Switch to Learning Schedule</button>
+            <button onclick="switchToClassSchedule()">Switch to Class Schedule</button>
+            <button onclick="toggleHistory()">Show History</button>
+        </div>
+
+        <ul id="taskList"></ul>
+        <div id="taskHistory" style="margin-top: 30px; display: none;">
+            <h2>Task History</h2>
+            <p class="empty-state">No history available yet.</p>
+        </div>
+    </div>
+
+    <button class="theme-toggle" onclick="toggleDarkMode()">🌓</button>
+
+    <!-- Task Edit Modal -->
+    <div id="editTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Edit Task</h2>
+            <div class="modal-form">
+                <label for="editTaskText">Task Text:</label>
+                <input type="text" id="editTaskText">
+
+                <label for="editTaskCategory">Category:</label>
+                <select id="editTaskCategory">
+                    <option value="">No Category</option>
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="learning">Learning</option>
+                    <option value="exercise">Exercise</option>
+                </select>
+
+                <label>Timer Duration:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="editTaskTimerHours" min="0" placeholder="Hours">
+                    <input type="number" id="editTaskTimerMinutes" min="0" max="59" placeholder="Minutes">
+                </div>
+
+                <label for="editTaskReminder">Reminder Time:</label>
+                <input type="datetime-local" id="editTaskReminder">
+
+                <button onclick="saveEditedTask()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const taskList = document.getElementById('taskList');
+        const taskInput = document.getElementById('taskInput');
+        const reminderInput = document.getElementById('reminderInput');
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || { learning: [], class: [] };
+        let activeSchedule = localStorage.getItem('activeSchedule') || 'learning';
+        let activeTimer = null;
+
+        // Load tasks on page load
+        window.onload = () => {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) document.body.classList.add('dark-mode');
+
+            addRandomHistory(); // Add random history for testing
+            checkDayReset();
+            updateScheduleUI();
+            loadTasks();
+            displayCurrentDate();
+            displayTaskHistory();
+        };
+
+        // Check if the day has changed and reset tasks
+        function checkDayReset() {
+            const lastSessionDate = localStorage.getItem('lastSessionDate');
+            const today = new Date().toLocaleDateString();
+
+            if (lastSessionDate !== today) {
+                localStorage.setItem('lastSessionDate', today);
+                tasks = { learning: [], class: [] }; // Clear tasks for the new day
+                saveTasks();
+                alert("A new day has started. Tasks have been reset.");
+            }
+        }
+
+        // Add a new task
+        function addTask() {
+            const text = taskInput.value.trim();
+            const reminderValue = reminderInput.value;
+            const category = document.getElementById('categoryInput').value;
+
+            if (!text) return;
+
+            const reminder = reminderValue ? new Date(reminderValue).getTime() : null;
+
+            const task = {
+                id: Date.now(),
+                text,
+                reminder,
+                category,
+                completed: false,
+                timer: null
+            };
+
+            tasks[activeSchedule].push(task);
+            saveTasks();
+            loadTasks();
+
+            // Set up a reminder for this task
+            if (reminder) {
+                scheduleTaskReminder(task);
+            }
+
+            taskInput.value = '';
+            reminderInput.value = '';
+            document.getElementById('categoryInput').value = '';
+        }
+
+        // Add a learning schedule
+        function addLearningSchedule() {
+            tasks.learning = [
+                { id: Date.now(), text: "Read a programming book", category: "learning", timer: 3600 },
+                { id: Date.now() + 1, text: "Practice coding challenges", category: "learning", timer: 5400 },
+                { id: Date.now() + 2, text: "Watch a tutorial video", category: "learning", timer: 7200 },
+                { id: Date.now() + 3, text: "Work on a personal project", category: "learning", timer: 10800 }
+            ];
+            saveTasks();
+            alert("Learning schedule added successfully!");
+            switchToLearningSchedule();
+        }
+
+        // Add a class schedule
+        function addClassSchedule() {
+            tasks.class = [
+                { id: Date.now(), text: "Morning classes", category: "work", timer: null },
+                { id: Date.now() + 1, text: "Lunch break", category: "personal", timer: null },
+                { id: Date.now() + 2, text: "Afternoon classes", category: "work", timer: null }
+            ];
+            saveTasks();
+            alert("Class schedule added successfully!");
+            switchToClassSchedule();
+        }
+
+        // Switch to learning schedule
+        function switchToLearningSchedule() {
+            activeSchedule = 'learning';
+            localStorage.setItem('activeSchedule', activeSchedule);
+            updateScheduleUI();
+            loadTasks();
+        }
+
+        // Switch to class schedule
+        function switchToClassSchedule() {
+            activeSchedule = 'class';
+            localStorage.setItem('activeSchedule', activeSchedule);
+            updateScheduleUI();
+            loadTasks();
+        }
+
+        // Update the UI to reflect the active schedule
+        function updateScheduleUI() {
+            const learningButton = document.querySelector('button[onclick="switchToLearningSchedule()"]');
+            const classButton = document.querySelector('button[onclick="switchToClassSchedule()"]');
+            if (activeSchedule === 'learning') {
+                learningButton.style.backgroundColor = '#45a049'; // Highlight active button
+                classButton.style.backgroundColor = 'var(--primary-color)';
+            } else {
+                classButton.style.backgroundColor = '#45a049'; // Highlight active button
+                learningButton.style.backgroundColor = 'var(--primary-color)';
+            }
+            loadTasks(); // Ensure tasks are reloaded when switching schedules
+        }
+
+        // Load and display tasks
+        function loadTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            if (!tasks[activeSchedule] || tasks[activeSchedule].length === 0) {
+                taskList.innerHTML = '<p class="empty-state">No tasks yet. Add a task to get started!</p>';
+                return;
+            }
+
+            tasks[activeSchedule].forEach(task => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="task-details">
+                        <span>${task.text} (${task.category || "No Category"})</span>
+                        ${task.timer !== null ? `<span class="task-timer" id="timer-${task.id}">Timer: ${formatTime(task.timer)}</span>` : ''}
+                        ${task.reminder ? `<span class="scheduled-time">Scheduled: ${new Date(task.reminder).toLocaleString()}</span>` : ''}
+                    </div>
+                    <div class="timer-controls">
+                        <button class="start-btn" onclick="startTimer(${task.id})">Start</button>
+                        <button class="stop-btn" onclick="stopTimer(${task.id})">Stop</button>
+                    </div>
+                    <button class="edit-btn" onclick="editTask(${task.id})">Edit</button>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                `;
+                taskList.appendChild(li);
+
+                // If we have a reminder, schedule it
+                if (task.reminder) {
+                    scheduleTaskReminder(task);
+                }
+            });
+        }
+
+        // Edit a task
+        function editTask(id) {
+            const task = tasks[activeSchedule].find(t => t.id === id);
+            if (!task) return;
+
+            const modal = document.getElementById('editTaskModal');
+            document.getElementById('editTaskText').value = task.text;
+            document.getElementById('editTaskCategory').value = task.category || '';
+            document.getElementById('editTaskTimerHours').value = task.timer !== null ? Math.floor(task.timer / 3600) : 0;
+            document.getElementById('editTaskTimerMinutes').value = task.timer !== null ? Math.floor((task.timer % 3600) / 60) : 0;
+            document.getElementById('editTaskReminder').value = task.reminder ? new Date(task.reminder).toISOString().slice(0, 16) : '';
+
+            modal.dataset.taskId = id;
+            modal.style.display = 'block';
+        }
+
+        // Save edited task
+        function saveEditedTask() {
+            const modal = document.getElementById('editTaskModal');
+            const taskId = parseInt(modal.dataset.taskId);
+            const task = tasks[activeSchedule].find(t => t.id === taskId);
+            if (!task) return;
+
+            task.text = document.getElementById('editTaskText').value.trim();
+            task.category = document.getElementById('editTaskCategory').value;
+            const hours = parseInt(document.getElementById('editTaskTimerHours').value) || 0;
+            const minutes = parseInt(document.getElementById('editTaskTimerMinutes').value) || 0;
+            task.timer = (hours * 3600) + (minutes * 60);
+            const reminderValue = document.getElementById('editTaskReminder').value;
+            task.reminder = reminderValue ? new Date(reminderValue).getTime() : null;
+
+            saveTasks();
+            loadTasks();
+            closeModal();
+        }
+
+        // Close the modal
+        function closeModal() {
+            document.getElementById('editTaskModal').style.display = 'none';
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            const modal = document.getElementById('editTaskModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Delete a task
+        function deleteTask(id) {
+            tasks[activeSchedule] = tasks[activeSchedule].filter(t => t.id !== id);
+            saveTasks();
+            loadTasks();
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Format time in HH:MM:SS
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Start the timer for a task
+        function startTimer(id) {
+            if (activeTimer) {
+                alert("A timer is already running. Please stop it before starting a new one.");
+                return;
+            }
+
+            const task = tasks[activeSchedule].find(t => t.id === id);
+            if (!task || task.timer === null) return;
+
+            activeTimer = setInterval(() => {
+                if (task.timer > 0) {
+                    task.timer--;
+                    document.getElementById(`timer-${id}`).textContent = `Timer: ${formatTime(task.timer)}`;
+                } else {
+                    clearInterval(activeTimer);
+                    activeTimer = null;
+                    alert(`Time's up for task: ${task.text}`);
+                }
+            }, 1000);
+        }
+
+        // Stop the timer for a task
+        function stopTimer(id) {
+            if (activeTimer) {
+                clearInterval(activeTimer);
+                activeTimer = null;
+                alert("Timer stopped.");
+            }
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        // Add more tasks to both sections
+        function addMoreTasksToBothSections() {
+            const newTaskText = prompt("Enter the task to add to both sections:");
+            if (!newTaskText) return;
+
+            const newTask = {
+                id: Date.now(),
+                text: newTaskText.trim(),
+                category: "general",
+                completed: false,
+                timer: null
+            };
+
+            tasks.learning.push({ ...newTask });
+            tasks.class.push({ ...newTask });
+            saveTasks();
+            alert("Task added to both sections!");
+            loadTasks();
+        }
+
+        // Display current day and date
+        function displayCurrentDate() {
+            const dateElement = document.getElementById('currentDate');
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = today.toLocaleDateString(undefined, options);
+        }
+
+        // Track and display task history
+        function updateTaskHistory() {
+            const history = JSON.parse(localStorage.getItem('taskHistory')) || {};
+            const today = new Date().toLocaleDateString();
+
+            if (!history[today]) {
+                history[today] = { completed: [], missed: [] };
+            }
+
+            tasks.learning.forEach(task => {
+                if (task.completed && !history[today].completed.includes(task.text)) {
+                    history[today].completed.push(task.text);
+                } else if (!task.completed && !history[today].missed.includes(task.text)) {
+                    history[today].missed.push(task.text);
+                }
+            });
+
+            tasks.class.forEach(task => {
+                if (task.completed && !history[today].completed.includes(task.text)) {
+                    history[today].completed.push(task.text);
+                } else if (!task.completed && !history[today].missed.includes(task.text)) {
+                    history[today].missed.push(task.text);
+                }
+            });
+
+            localStorage.setItem('taskHistory', JSON.stringify(history));
+            displayTaskHistory();
+        }
+
+        // Display task history
+        function displayTaskHistory() {
+            const historySection = document.getElementById('taskHistory');
+            const history = JSON.parse(localStorage.getItem('taskHistory')) || {};
+            historySection.innerHTML = '';
+
+            for (const [date, record] of Object.entries(history)) {
+                const historyEntry = document.createElement('div');
+                historyEntry.innerHTML = `
+                    <h3>${date}</h3>
+                    <p><strong>Completed:</strong> ${record.completed.join(', ') || 'None'}</p>
+                    <p><strong>Missed:</strong> ${record.missed.join(', ') || 'None'}</p>
+                `;
+                historySection.appendChild(historyEntry);
+            }
+        }
+
+        // Add random history for testing purposes
+        function addRandomHistory() {
+            const history = JSON.parse(localStorage.getItem('taskHistory')) || {};
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const dayBeforeYesterday = new Date(today);
+            dayBeforeYesterday.setDate(today.getDate() - 2);
+
+            history[yesterday.toLocaleDateString()] = {
+                completed: ["Task A", "Task B"],
+                missed: ["Task C"]
+            };
+
+            history[dayBeforeYesterday.toLocaleDateString()] = {
+                completed: ["Task D"],
+                missed: ["Task E", "Task F"]
+            };
+
+            localStorage.setItem('taskHistory', JSON.stringify(history));
+        }
+
+        // Add a function to schedule task reminders
+        function scheduleTaskReminder(task) {
+            if (!task.reminder) return;
+
+            const now = new Date().getTime();
+            const timeUntilReminder = task.reminder - now;
+
+            if (timeUntilReminder > 0) {
+                setTimeout(() => {
+                    showNotification(`Time to start: ${task.text}`);
+                }, timeUntilReminder);
+            }
+        }
+
+        // Function to show notifications
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Play sound (optional)
+            const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
+            audio.play().catch(e => console.log('Audio playback error:', e));
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 5000);
+        }
+
+        // Toggle the visibility of the history section
+        function toggleHistory() {
+            const historyButton = document.querySelector('button[onclick="toggleHistory()"]');
+            const historySection = document.getElementById('taskHistory');
+            if (historySection.style.display === 'none') {
+                historyButton.textContent = 'Hide History';
+                historySection.style.display = 'block';
+            } else {
+                historyButton.textContent = 'Show History';
+                historySection.style.display = 'none';
+            }
+        }
+
+        // Check for tasks scheduled to start soon after page loads
+        window.addEventListener('load', () => {
+            tasks[activeSchedule].forEach(task => {
+                if (task.reminder) {
+                    scheduleTaskReminder(task);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
