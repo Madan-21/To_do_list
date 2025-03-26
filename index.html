@@ -428,6 +428,8 @@
         </div>
     </div>
 
+    <audio id="alarmSound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3"></audio>
+
     <script>
         const taskList = document.getElementById('taskList');
         const taskInput = document.getElementById('taskInput');
@@ -807,11 +809,11 @@
             notification.textContent = message;
             document.body.appendChild(notification);
 
-            // Play sound (optional)
-            const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
-            audio.play().catch(e => console.log('Audio playback error:', e));
+            // Play alarm sound
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.play().catch(e => console.log('Audio playback error:', e));
 
-            // Remove after 5 seconds
+            // Remove notification after 5 seconds
             setTimeout(() => {
                 notification.style.opacity = '0';
                 setTimeout(() => {
