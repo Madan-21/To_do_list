@@ -1,7 +1,7 @@
 {
     "name": "Enhanced To-Do List",
     "short_name": "To-Do",
-    "start_url": "./index.html",
+    "start_url": "index.html",
     "display": "standalone",
     "background_color": "#FFF5E6",
     "theme_color": "#FF9800",
