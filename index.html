@@ -40,14 +40,11 @@
             align-items: center;
             justify-content: center;
             /* Center content vertically */
-        }
-
-        h1 {
+        }        h1 {
             text-align: center;
             margin: 0;
             padding: 20px;
             background: linear-gradient(135deg, #FF9800, #E91E63);
-            /* Orange to Pink */
             color: white;
             width: 100%;
             position: sticky;
@@ -55,80 +52,79 @@
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 0 0 10px 10px;
-            /* Rounded bottom corners */
-        }        .container {
+        }
+
+        .container {
             max-width: 700px;
             margin: 20px auto;
             padding: 25px;
             background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
             border-radius: 15px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .input-section {
+        }        .input-section {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
             justify-content: center;
-            /* Center inputs */
         }
 
-        input,
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }input,
         select,
         button {
             padding: 12px;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 8px;
-            /* Rounded corners */
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            /* Subtle shadow */
         }
 
         button {
             background: linear-gradient(135deg, #FF9800, #E91E63);
-            /* Orange to Pink */
             color: white;
             cursor: pointer;
             border: none;
-            /* Remove border */
         }
 
         button:hover {
             background: linear-gradient(135deg, #E91E63, #FF5722);
-            /* Pink to Darker Orange */
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            /* Add shadow on hover */
         }
 
         ul {
             list-style: none;
             padding: 0;
             margin: 0;
-        }
-
-        li {
+        }        li {
             background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
-            /* Light Orange to Light Pink */
             padding: 20px;
             margin-bottom: 15px;
             border-radius: 10px;
-            /* Rounded corners */
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            /* Add shadow */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         li:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-            /* Add shadow on hover */
         }
 
         .task-details {
@@ -183,14 +179,11 @@
             background: linear-gradient(135deg, #E91E63, #FF5722);
             transform: scale(1.1);
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-        }
-
-        .empty-state {
+        }        .empty-state {
             text-align: center;
             color: #aaa;
             font-style: italic;
             font-size: 16px;
-            /* Slightly larger font */
         }
 
         .timer-controls {
@@ -213,28 +206,28 @@
 
         .stop-btn:hover {
             background-color: #cc0000;
-        }        #taskHistory {
+        }
+
+        #taskHistory {
             margin-top: 30px;
             padding: 20px;
             background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
             border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        #taskHistory h2 {
+        }        #taskHistory h2 {
             font-size: 20px;
             color: #333;
             text-align: center;
-            /* Center align */
         }
 
-        /* Add styling for the reminder label and scheduled time display */
         .input-label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #555;
-        }        .scheduled-time {
+        }
+
+        .scheduled-time {
             font-size: 14px;
             color: var(--secondary-color);
             margin-top: 5px;
@@ -255,9 +248,7 @@
             max-width: 300px;
             opacity: 0;
             transform: translateY(20px);
-        }
-
-        @media (max-width: 600px) {
+        }        @media (max-width: 600px) {
             .container {
                 padding: 20px;
                 background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
@@ -267,6 +258,15 @@
             .input-section {
                 flex-direction: column;
                 gap: 15px;
+            }
+
+            .input-group {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .button-group {
+                flex-direction: column;
             }
 
             input,
@@ -313,18 +313,19 @@
             .empty-state {
                 font-size: 16px;
                 color: #aaa;
-            }
-
-            button {
+            }            button {
                 margin-bottom: 10px;
                 border: none;
                 background: linear-gradient(135deg, #FF9800, #E91E63);
+                width: 100%;
             }
 
             button:hover {
                 background: linear-gradient(135deg, #E91E63, #FF5722);
                 transform: scale(1.05);
-            }            #taskHistory {
+            }
+
+            #taskHistory {
                 margin-top: 20px;
                 padding: 20px;
                 background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
@@ -506,31 +507,42 @@
 <body>
     <h1>Enhanced To-Do List</h1>
     <p id="currentDate"></p>
-    <div class="container">
-        <div class="input-section">
-            <label class="input-label" for="taskInput">Task</label>
-            <input type="text" id="taskInput" placeholder="Enter a task">
+    <div class="container">        <div class="input-section">
+            <div class="input-group">
+                <label class="input-label" for="taskInput">Task</label>
+                <input type="text" id="taskInput" placeholder="Enter a task">
+            </div>
 
-            <label class="input-label" for="categoryInput">Category</label>
-            <select id="categoryInput">
-                <option value="">No Category</option>
-                <option value="work">Work</option>
-                <option value="personal">Personal</option>
-                <option value="learning">Learning</option>
-                <option value="exercise">Exercise</option>
-            </select>            <label class="input-label" for="reminderInput">Schedule Time</label>
-            <input type="datetime-local" id="reminderInput">
+            <div class="input-group">
+                <label class="input-label" for="categoryInput">Category</label>
+                <select id="categoryInput">
+                    <option value="">No Category</option>
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="learning">Learning</option>
+                    <option value="exercise">Exercise</option>
+                </select>
+            </div>
 
-            <label class="input-label" for="timerInput">Timer (minutes)</label>
-            <input type="number" id="timerInput" placeholder="Timer in minutes (optional)" min="1">
+            <div class="input-group">
+                <label class="input-label" for="reminderInput">Schedule Time</label>
+                <input type="datetime-local" id="reminderInput">
+            </div>
 
-            <button onclick="addTask()">Add Task</button>
-            <button onclick="addLearningSchedule()">Add Learning Schedule</button>
-            <button onclick="addClassSchedule()">Add Class Schedule</button>
-            <button onclick="addMoreTasksToBothSections()">Add Task to Both Sections</button>
-            <button onclick="switchToLearningSchedule()">Switch to Learning Schedule</button>
-            <button onclick="switchToClassSchedule()">Switch to Class Schedule</button>
-            <button onclick="toggleHistory()">Show History</button>
+            <div class="input-group">
+                <label class="input-label" for="timerInput">Timer (minutes)</label>
+                <input type="number" id="timerInput" placeholder="Timer in minutes (optional)" min="1">
+            </div>
+
+            <div class="button-group">
+                <button onclick="addTask()">Add Task</button>
+                <button onclick="addLearningSchedule()">Add Learning Schedule</button>
+                <button onclick="addClassSchedule()">Add Class Schedule</button>
+                <button onclick="addMoreTasksToBothSections()">Add Task to Both Sections</button>
+                <button onclick="switchToLearningSchedule()">Switch to Learning Schedule</button>
+                <button onclick="switchToClassSchedule()">Switch to Class Schedule</button>
+                <button onclick="toggleHistory()">Show History</button>
+            </div>
         </div>
 
         <ul id="taskList"></ul>
