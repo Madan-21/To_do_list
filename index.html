@@ -399,19 +399,106 @@
         .complete-btn {
             background-color: #4CAF50;
             color: white;
+        }        .complete-btn:hover {
+            background-color: #45a049;
         }
 
-        .complete-btn:hover {
-            background-color: #45a049;
+        /* Install Button */
+        .install-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .install-btn:hover {
+            background: linear-gradient(135deg, #45a049, #4CAF50);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Data persistence indicator */
+        .storage-indicator {
+            position: fixed;
+            top: 60px;
+            right: 15px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 999;
+            display: none;
         }
     </style>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#FF9800">
-    <script>
+    <meta name="theme-color" content="#FF9800">    <script>
+        let deferredPrompt;
+        let installButton;
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js')
                 .then(() => console.log('Service Worker Registered'))
                 .catch(err => console.error('Service Worker Registration Failed:', err));
+        }
+
+        // PWA Install prompt handling
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('Install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallButton();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed successfully');
+            hideInstallButton();
+            showNotification('App installed successfully! Your data will be saved locally.');
+        });
+
+        function showInstallButton() {
+            if (!installButton) {
+                installButton = document.createElement('button');
+                installButton.textContent = '📱 Install App';
+                installButton.className = 'install-btn';
+                installButton.onclick = installApp;
+                document.body.appendChild(installButton);
+            }
+            installButton.style.display = 'block';
+        }
+
+        function hideInstallButton() {
+            if (installButton) {
+                installButton.style.display = 'none';
+            }
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback for browsers that don't support install prompt
+                showNotification('To install: Use "Add to Home Screen" from your browser menu. Your data will be saved locally!');
+            }
         }
     </script>
 </head>
@@ -454,6 +541,9 @@
     </div>
 
     <button class="theme-toggle" onclick="toggleDarkMode()">🌓</button>
+    
+    <!-- Storage indicator -->
+    <div id="storageIndicator" class="storage-indicator">Data Saved ✓</div>
 
     <!-- Task Edit Modal -->
     <div id="editTaskModal" class="modal" style="display: none;">
@@ -508,8 +598,14 @@
                 displayCurrentDate();
                 displayTaskHistory();
                 updateTaskHistory(); // Update task history on load
+                checkIfInstalled(); // Check if app is installed
                 
                 console.log('Todo app loaded successfully');
+                
+                // Show data persistence message
+                if (localStorage.getItem('tasks')) {
+                    showNotification('Your data is safely stored locally!');
+                }
             } catch (error) {
                 console.error('Error loading todo app:', error);
             }
@@ -734,10 +830,28 @@
             tasks[activeSchedule] = tasks[activeSchedule].filter(t => t.id !== id);
             saveTasks();
             loadTasks();
+        }        // Save tasks to localStorage
+        function saveTasks() {            localStorage.setItem('tasks', JSON.stringify(tasks));
+            showStorageIndicator();
         }
 
-        // Save tasks to localStorage
-        function saveTasks() {            localStorage.setItem('tasks', JSON.stringify(tasks));
+        // Show storage indicator
+        function showStorageIndicator() {
+            const indicator = document.getElementById('storageIndicator');
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        // Check if app is installed
+        function checkIfInstalled() {
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                console.log('App is installed');
+                hideInstallButton();
+                showNotification('Welcome back! Your data is saved locally.');
+            }
         }
 
         // Format time in HH:MM:SS
