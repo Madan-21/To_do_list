@@ -2,11 +2,7 @@ const CACHE_NAME = "todo-cache-v1";
 const urlsToCache = [
   "./",
   "./index.html",
-  "./manifest.json",
-  "./style.css", // Add your CSS file path
-  "./script.js", // Add your JS file path
-  "./icons/icon-192x192.png",
-  "./icons/icon-512x512.png",
+  "./manifest.json"
 ];
 
 self.addEventListener("install", (event) => {

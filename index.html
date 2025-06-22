@@ -56,17 +56,13 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 0 0 10px 10px;
             /* Rounded bottom corners */
-        }
-
-        .container {
+        }        .container {
             max-width: 700px;
             margin: 20px auto;
             padding: 25px;
             background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
-            /* Light Orange to Light Pink */
-            /* Rounded corners */
+            border-radius: 15px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-            /* Add shadow for depth */
         }
 
         .input-section {
@@ -217,16 +213,12 @@
 
         .stop-btn:hover {
             background-color: #cc0000;
-        }
-
-        #taskHistory {
+        }        #taskHistory {
             margin-top: 30px;
             padding: 20px;
             background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
-            /* Light Orange to Light Pink */
-            /* Rounded corners */
+            border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-            /* Add shadow */
         }
 
         #taskHistory h2 {
@@ -242,9 +234,7 @@
             margin-bottom: 5px;
             font-weight: bold;
             color: #555;
-        }
-
-        .scheduled-time {
+        }        .scheduled-time {
             font-size: 14px;
             color: var(--secondary-color);
             margin-top: 5px;
@@ -263,6 +253,8 @@
             z-index: 1000;
             transition: all 0.3s ease;
             max-width: 300px;
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         @media (max-width: 600px) {
@@ -332,9 +324,7 @@
             button:hover {
                 background: linear-gradient(135deg, #E91E63, #FF5722);
                 transform: scale(1.05);
-            }
-
-            #taskHistory {
+            }            #taskHistory {
                 margin-top: 20px;
                 padding: 20px;
                 background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
@@ -345,6 +335,74 @@
                 font-size: 18px;
                 color: #cc0000;
             }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: var(--item-bg);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .modal-form label {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .modal-form input,
+        .modal-form select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .task-completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .complete-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .complete-btn:hover {
+            background-color: #45a049;
         }
     </style>
     <link rel="manifest" href="manifest.json">
@@ -373,10 +431,11 @@
                 <option value="personal">Personal</option>
                 <option value="learning">Learning</option>
                 <option value="exercise">Exercise</option>
-            </select>
-
-            <label class="input-label" for="reminderInput">Schedule Time</label>
+            </select>            <label class="input-label" for="reminderInput">Schedule Time</label>
             <input type="datetime-local" id="reminderInput">
+
+            <label class="input-label" for="timerInput">Timer (minutes)</label>
+            <input type="number" id="timerInput" placeholder="Timer in minutes (optional)" min="1">
 
             <button onclick="addTask()">Add Task</button>
             <button onclick="addLearningSchedule()">Add Learning Schedule</button>
@@ -431,24 +490,29 @@
     <audio id="alarmSound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3"></audio>
 
     <script>
-        const taskList = document.getElementById('taskList');
-        const taskInput = document.getElementById('taskInput');
+        const taskList = document.getElementById('taskList');        const taskInput = document.getElementById('taskInput');
         const reminderInput = document.getElementById('reminderInput');
         let tasks = JSON.parse(localStorage.getItem('tasks')) || { learning: [], class: [] };
         let activeSchedule = localStorage.getItem('activeSchedule') || 'learning';
         let activeTimer = null;
-
-        // Load tasks on page load
+        let timerIntervals = {}; // Store multiple timer intervals        // Load tasks on page load
         window.onload = () => {
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            if (isDarkMode) document.body.classList.add('dark-mode');
+            try {
+                const isDarkMode = localStorage.getItem('darkMode') === 'true';
+                if (isDarkMode) document.body.classList.add('dark-mode');
 
-            addRandomHistory(); // Add random history for testing
-            checkDayReset();
-            updateScheduleUI();
-            loadTasks();
-            displayCurrentDate();
-            displayTaskHistory();
+                addRandomHistory(); // Add random history for testing
+                checkDayReset();
+                updateScheduleUI();
+                loadTasks();
+                displayCurrentDate();
+                displayTaskHistory();
+                updateTaskHistory(); // Update task history on load
+                
+                console.log('Todo app loaded successfully');
+            } catch (error) {
+                console.error('Error loading todo app:', error);
+            }
         };
 
         // Check if the day has changed and reset tasks
@@ -462,60 +526,67 @@
                 saveTasks();
                 alert("A new day has started. Tasks have been reset.");
             }
-        }
-
-        // Add a new task
+        }        // Add a new task
         function addTask() {
-            const text = taskInput.value.trim();
-            const reminderValue = reminderInput.value;
-            const category = document.getElementById('categoryInput').value;
+            try {
+                const text = taskInput.value.trim();
+                const reminderValue = reminderInput.value;
+                const category = document.getElementById('categoryInput').value;
+                const timerMinutes = parseInt(document.getElementById('timerInput').value) || null;
 
-            if (!text) return;
+                if (!text) {
+                    alert('Please enter a task description');
+                    return;
+                }
 
-            const reminder = reminderValue ? new Date(reminderValue).getTime() : null;
+                const reminder = reminderValue ? new Date(reminderValue).getTime() : null;
+                const timer = timerMinutes ? timerMinutes * 60 : null; // Convert minutes to seconds
 
-            const task = {
-                id: Date.now(),
-                text,
-                reminder,
-                category,
-                completed: false,
-                timer: null
-            };
+                const task = {
+                    id: Date.now(),
+                    text,
+                    reminder,
+                    category,
+                    completed: false,
+                    timer
+                };
 
-            tasks[activeSchedule].push(task);
-            saveTasks();
-            loadTasks();
+                tasks[activeSchedule].push(task);
+                saveTasks();
+                loadTasks();
 
-            // Set up a reminder for this task
-            if (reminder) {
-                scheduleTaskReminder(task);
+                // Set up a reminder for this task
+                if (reminder) {
+                    scheduleTaskReminder(task);
+                }
+
+                taskInput.value = '';
+                reminderInput.value = '';
+                document.getElementById('categoryInput').value = '';
+                document.getElementById('timerInput').value = '';
+                
+                showNotification('Task added successfully!');
+            } catch (error) {
+                console.error('Error adding task:', error);
+                alert('Error adding task. Please try again.');
             }
-
-            taskInput.value = '';
-            reminderInput.value = '';
-            document.getElementById('categoryInput').value = '';
-        }
-
-        // Add a learning schedule
+        }// Add a learning schedule
         function addLearningSchedule() {
             tasks.learning = [
-                { id: Date.now(), text: "Read a programming book", category: "learning", timer: 3600 },
-                { id: Date.now() + 1, text: "Practice coding challenges", category: "learning", timer: 5400 },
-                { id: Date.now() + 2, text: "Watch a tutorial video", category: "learning", timer: 7200 },
-                { id: Date.now() + 3, text: "Work on a personal project", category: "learning", timer: 10800 }
+                { id: Date.now(), text: "Read a programming book", category: "learning", timer: 3600, completed: false, reminder: null },
+                { id: Date.now() + 1, text: "Practice coding challenges", category: "learning", timer: 5400, completed: false, reminder: null },
+                { id: Date.now() + 2, text: "Watch a tutorial video", category: "learning", timer: 7200, completed: false, reminder: null },
+                { id: Date.now() + 3, text: "Work on a personal project", category: "learning", timer: 10800, completed: false, reminder: null }
             ];
             saveTasks();
             alert("Learning schedule added successfully!");
             switchToLearningSchedule();
-        }
-
-        // Add a class schedule
+        }        // Add a class schedule
         function addClassSchedule() {
             tasks.class = [
-                { id: Date.now(), text: "Morning classes", category: "work", timer: null },
-                { id: Date.now() + 1, text: "Lunch break", category: "personal", timer: null },
-                { id: Date.now() + 2, text: "Afternoon classes", category: "work", timer: null }
+                { id: Date.now(), text: "Morning classes", category: "work", timer: null, completed: false, reminder: null },
+                { id: Date.now() + 1, text: "Lunch break", category: "personal", timer: null, completed: false, reminder: null },
+                { id: Date.now() + 2, text: "Afternoon classes", category: "work", timer: null, completed: false, reminder: null }
             ];
             saveTasks();
             alert("Class schedule added successfully!");
@@ -534,22 +605,32 @@
         function switchToClassSchedule() {
             activeSchedule = 'class';
             localStorage.setItem('activeSchedule', activeSchedule);
-            updateScheduleUI();
-            loadTasks();
+            updateScheduleUI();            loadTasks();
         }
 
         // Update the UI to reflect the active schedule
         function updateScheduleUI() {
             const learningButton = document.querySelector('button[onclick="switchToLearningSchedule()"]');
             const classButton = document.querySelector('button[onclick="switchToClassSchedule()"]');
-            if (activeSchedule === 'learning') {
-                learningButton.style.backgroundColor = '#45a049'; // Highlight active button
-                classButton.style.backgroundColor = 'var(--primary-color)';
-            } else {
-                classButton.style.backgroundColor = '#45a049'; // Highlight active button
-                learningButton.style.backgroundColor = 'var(--primary-color)';
+            
+            // Reset all buttons to default style first
+            if (learningButton) {
+                learningButton.style.backgroundColor = '';
+                learningButton.style.background = '';
             }
-            loadTasks(); // Ensure tasks are reloaded when switching schedules
+            if (classButton) {
+                classButton.style.backgroundColor = '';
+                classButton.style.background = '';
+            }
+            
+            // Highlight the active button
+            if (activeSchedule === 'learning' && learningButton) {
+                learningButton.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                learningButton.style.color = 'white';
+            } else if (activeSchedule === 'class' && classButton) {
+                classButton.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                classButton.style.color = 'white';
+            }
         }
 
         // Load and display tasks
@@ -558,24 +639,28 @@
             taskList.innerHTML = '';
 
             if (!tasks[activeSchedule] || tasks[activeSchedule].length === 0) {
-                taskList.innerHTML = '<p class="empty-state">No tasks yet. Add a task to get started!</p>';
-                return;
+                taskList.innerHTML = '<p class="empty-state">No tasks yet. Add a task to get started!</p>';                return;
             }
 
             tasks[activeSchedule].forEach(task => {
                 const li = document.createElement('li');
+                li.className = task.completed ? 'task-completed' : '';
                 li.innerHTML = `
                     <div class="task-details">
                         <span>${task.text} (${task.category || "No Category"})</span>
-                        ${task.timer !== null ? `<span class="task-timer" id="timer-${task.id}">Timer: ${formatTime(task.timer)}</span>` : ''}
+                        ${task.timer !== null && task.timer !== undefined ? `<span class="task-timer" id="timer-${task.id}">Timer: ${formatTime(task.timer)}</span>` : ''}
                         ${task.reminder ? `<span class="scheduled-time">Scheduled: ${new Date(task.reminder).toLocaleString()}</span>` : ''}
                     </div>
-                    <div class="timer-controls">
-                        <button class="start-btn" onclick="startTimer(${task.id})">Start</button>
-                        <button class="stop-btn" onclick="stopTimer(${task.id})">Stop</button>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="complete-btn" onclick="toggleTaskCompletion(${task.id})">${task.completed ? 'Undo' : 'Complete'}</button>
+                        ${task.timer !== null && task.timer !== undefined ? `
+                        <div class="timer-controls">
+                            <button class="start-btn" onclick="startTimer(${task.id})">Start</button>
+                            <button class="stop-btn" onclick="stopTimer(${task.id})">Stop</button>
+                        </div>` : ''}
+                        <button class="edit-btn" onclick="editTask(${task.id})">Edit</button>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
                     </div>
-                    <button class="edit-btn" onclick="editTask(${task.id})">Edit</button>
-                    <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
                 `;
                 taskList.appendChild(li);
 
@@ -596,9 +681,7 @@
             document.getElementById('editTaskCategory').value = task.category || '';
             document.getElementById('editTaskTimerHours').value = task.timer !== null ? Math.floor(task.timer / 3600) : 0;
             document.getElementById('editTaskTimerMinutes').value = task.timer !== null ? Math.floor((task.timer % 3600) / 60) : 0;
-            document.getElementById('editTaskReminder').value = task.reminder ? new Date(task.reminder).toISOString().slice(0, 16) : '';
-
-            modal.dataset.taskId = id;
+            document.getElementById('editTaskReminder').value = task.reminder ? new Date(task.reminder).toISOString().slice(0, 16) : '';            modal.dataset.taskId = id;
             modal.style.display = 'block';
         }
 
@@ -613,13 +696,24 @@
             task.category = document.getElementById('editTaskCategory').value;
             const hours = parseInt(document.getElementById('editTaskTimerHours').value) || 0;
             const minutes = parseInt(document.getElementById('editTaskTimerMinutes').value) || 0;
-            task.timer = (hours * 3600) + (minutes * 60);
+            task.timer = (hours * 3600) + (minutes * 60) || null;
             const reminderValue = document.getElementById('editTaskReminder').value;
             task.reminder = reminderValue ? new Date(reminderValue).getTime() : null;
 
             saveTasks();
             loadTasks();
             closeModal();
+        }
+
+        // Toggle task completion
+        function toggleTaskCompletion(id) {
+            const task = tasks[activeSchedule].find(t => t.id === id);
+            if (!task) return;
+            
+            task.completed = !task.completed;
+            saveTasks();
+            loadTasks();
+            updateTaskHistory();
         }
 
         // Close the modal
@@ -643,70 +737,87 @@
         }
 
         // Save tasks to localStorage
-        function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+        function saveTasks() {            localStorage.setItem('tasks', JSON.stringify(tasks));
         }
 
         // Format time in HH:MM:SS
         function formatTime(seconds) {
-            const hrs = Math.floor(seconds / 3600);
-            const mins = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            if (seconds === null || seconds === undefined || isNaN(seconds)) {
+                return "00:00:00";
+            }
+            
+            const hrs = Math.floor(Math.abs(seconds) / 3600);
+            const mins = Math.floor((Math.abs(seconds) % 3600) / 60);
+            const secs = Math.abs(seconds) % 60;            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
         // Start the timer for a task
         function startTimer(id) {
-            if (activeTimer) {
-                alert("A timer is already running. Please stop it before starting a new one.");
-                return;
+            const task = tasks[activeSchedule].find(t => t.id === id);
+            if (!task || task.timer === null || task.timer === undefined) return;
+
+            // Stop any existing timer for this task
+            if (timerIntervals[id]) {
+                clearInterval(timerIntervals[id]);
             }
 
-            const task = tasks[activeSchedule].find(t => t.id === id);
-            if (!task || task.timer === null) return;
-
-            activeTimer = setInterval(() => {
+            timerIntervals[id] = setInterval(() => {
                 if (task.timer > 0) {
                     task.timer--;
-                    document.getElementById(`timer-${id}`).textContent = `Timer: ${formatTime(task.timer)}`;
+                    const timerElement = document.getElementById(`timer-${id}`);
+                    if (timerElement) {
+                        timerElement.textContent = `Timer: ${formatTime(task.timer)}`;
+                    }
+                    saveTasks(); // Save the updated timer value
                 } else {
-                    clearInterval(activeTimer);
-                    activeTimer = null;
-                    alert(`Time's up for task: ${task.text}`);
+                    clearInterval(timerIntervals[id]);
+                    delete timerIntervals[id];
+                    showNotification(`Time's up for task: ${task.text}`);
+                    
+                    // Play alarm sound
+                    const alarmSound = document.getElementById('alarmSound');
+                    if (alarmSound) {
+                        alarmSound.currentTime = 0;
+                        alarmSound.play().catch(e => console.log('Audio playback error:', e));
+                    }
                 }
             }, 1000);
         }
 
         // Stop the timer for a task
         function stopTimer(id) {
-            if (activeTimer) {
-                clearInterval(activeTimer);
-                activeTimer = null;
-                alert("Timer stopped.");
+            if (timerIntervals[id]) {
+                clearInterval(timerIntervals[id]);
+                delete timerIntervals[id];
+                showNotification("Timer stopped.");
             }
         }
 
         // Toggle dark mode
         function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            document.body.classList.toggle('dark-mode');            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         }
 
         // Add more tasks to both sections
         function addMoreTasksToBothSections() {
             const newTaskText = prompt("Enter the task to add to both sections:");
-            if (!newTaskText) return;
+            if (!newTaskText || !newTaskText.trim()) return;
 
             const newTask = {
                 id: Date.now(),
                 text: newTaskText.trim(),
                 category: "general",
                 completed: false,
-                timer: null
+                timer: null,
+                reminder: null
             };
 
-            tasks.learning.push({ ...newTask });
-            tasks.class.push({ ...newTask });
+            // Add to learning schedule
+            tasks.learning.push({ ...newTask, id: Date.now() });
+            
+            // Add to class schedule with different ID
+            tasks.class.push({ ...newTask, id: Date.now() + 1 });
+            
             saveTasks();
             alert("Task added to both sections!");
             loadTasks();
@@ -716,8 +827,7 @@
         function displayCurrentDate() {
             const dateElement = document.getElementById('currentDate');
             const today = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            dateElement.textContent = today.toLocaleDateString(undefined, options);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };            dateElement.textContent = today.toLocaleDateString(undefined, options);
         }
 
         // Track and display task history
@@ -729,19 +839,29 @@
                 history[today] = { completed: [], missed: [] };
             }
 
-            tasks.learning.forEach(task => {
-                if (task.completed && !history[today].completed.includes(task.text)) {
-                    history[today].completed.push(task.text);
-                } else if (!task.completed && !history[today].missed.includes(task.text)) {
-                    history[today].missed.push(task.text);
-                }
-            });
+            // Clear today's history before updating
+            history[today] = { completed: [], missed: [] };
 
-            tasks.class.forEach(task => {
-                if (task.completed && !history[today].completed.includes(task.text)) {
-                    history[today].completed.push(task.text);
-                } else if (!task.completed && !history[today].missed.includes(task.text)) {
-                    history[today].missed.push(task.text);
+            // Update history for both schedules
+            ['learning', 'class'].forEach(schedule => {
+                if (tasks[schedule]) {
+                    tasks[schedule].forEach(task => {
+                        if (task.completed && !history[today].completed.some(t => t.id === task.id)) {
+                            history[today].completed.push({
+                                id: task.id,
+                                text: task.text,
+                                category: task.category,
+                                schedule: schedule
+                            });
+                        } else if (!task.completed && !history[today].missed.some(t => t.id === task.id)) {
+                            history[today].missed.push({
+                                id: task.id,
+                                text: task.text,
+                                category: task.category,
+                                schedule: schedule
+                            });
+                        }
+                    });
                 }
             });
 
@@ -753,17 +873,44 @@
         function displayTaskHistory() {
             const historySection = document.getElementById('taskHistory');
             const history = JSON.parse(localStorage.getItem('taskHistory')) || {};
-            historySection.innerHTML = '';
-
-            for (const [date, record] of Object.entries(history)) {
-                const historyEntry = document.createElement('div');
-                historyEntry.innerHTML = `
-                    <h3>${date}</h3>
-                    <p><strong>Completed:</strong> ${record.completed.join(', ') || 'None'}</p>
-                    <p><strong>Missed:</strong> ${record.missed.join(', ') || 'None'}</p>
-                `;
-                historySection.appendChild(historyEntry);
+            
+            if (Object.keys(history).length === 0) {
+                historySection.innerHTML = '<h2>Task History</h2><p class="empty-state">No history available yet.</p>';
+                return;
             }
+
+            let historyHTML = '<h2>Task History</h2>';
+            
+            // Sort dates in descending order (most recent first)
+            const sortedDates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a));
+            
+            sortedDates.forEach(date => {
+                const record = history[date];
+                historyHTML += `
+                    <div style="margin-bottom: 20px; padding: 15px; background: var(--item-bg); border-radius: 8px; box-shadow: var(--item-shadow);">
+                        <h3 style="color: var(--primary-color); margin-bottom: 10px;">${date}</h3>
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: #4CAF50;">Completed (${record.completed.length}):</strong>
+                            ${record.completed.length > 0 ? 
+                                '<ul style="margin: 5px 0; padding-left: 20px;">' + 
+                                record.completed.map(task => `<li>${task.text} (${task.category || 'No Category'}) - ${task.schedule}</li>`).join('') + 
+                                '</ul>' : 
+                                '<span style="color: #aaa; font-style: italic;">None</span>'
+                            }
+                        </div>
+                        <div>
+                            <strong style="color: var(--danger-color);">Pending/Missed (${record.missed.length}):</strong>
+                            ${record.missed.length > 0 ? 
+                                '<ul style="margin: 5px 0; padding-left: 20px;">' + 
+                                record.missed.map(task => `<li>${task.text} (${task.category || 'No Category'}) - ${task.schedule}</li>`).join('') + 
+                                '</ul>' : 
+                                '<span style="color: #aaa; font-style: italic;">None</span>'
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+              historySection.innerHTML = historyHTML;
         }
 
         // Add random history for testing purposes
@@ -775,15 +922,29 @@
             const dayBeforeYesterday = new Date(today);
             dayBeforeYesterday.setDate(today.getDate() - 2);
 
-            history[yesterday.toLocaleDateString()] = {
-                completed: ["Task A", "Task B"],
-                missed: ["Task C"]
-            };
+            if (!history[yesterday.toLocaleDateString()]) {
+                history[yesterday.toLocaleDateString()] = {
+                    completed: [
+                        { id: 1, text: "Read programming book", category: "learning", schedule: "learning" },
+                        { id: 2, text: "Morning exercise", category: "exercise", schedule: "class" }
+                    ],
+                    missed: [
+                        { id: 3, text: "Code review", category: "work", schedule: "learning" }
+                    ]
+                };
+            }
 
-            history[dayBeforeYesterday.toLocaleDateString()] = {
-                completed: ["Task D"],
-                missed: ["Task E", "Task F"]
-            };
+            if (!history[dayBeforeYesterday.toLocaleDateString()]) {
+                history[dayBeforeYesterday.toLocaleDateString()] = {
+                    completed: [
+                        { id: 4, text: "Team meeting", category: "work", schedule: "class" }
+                    ],
+                    missed: [
+                        { id: 5, text: "Study algorithms", category: "learning", schedule: "learning" },
+                        { id: 6, text: "Grocery shopping", category: "personal", schedule: "class" }
+                    ]
+                };
+            }
 
             localStorage.setItem('taskHistory', JSON.stringify(history));
         }
@@ -798,27 +959,40 @@
             if (timeUntilReminder > 0) {
                 setTimeout(() => {
                     showNotification(`Time to start: ${task.text}`);
-                }, timeUntilReminder);
+
+                    // Play alarm sound
+                    const alarmSound = document.getElementById('alarmSound');
+                    alarmSound.currentTime = 0; // Reset sound to the beginning
+                    alarmSound.play().catch(e => console.log('Audio playback error:', e));                }, timeUntilReminder);
             }
         }
 
         // Function to show notifications
         function showNotification(message) {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+
             const notification = document.createElement('div');
             notification.className = 'notification';
             notification.textContent = message;
             document.body.appendChild(notification);
 
-            // Play alarm sound
-            const alarmSound = document.getElementById('alarmSound');
-            alarmSound.play().catch(e => console.log('Audio playback error:', e));
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateY(0)';
+            }, 100);
 
             // Remove notification after 5 seconds
             setTimeout(() => {
                 notification.style.opacity = '0';
+                notification.style.transform = 'translateY(20px)';
                 setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 500);
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
             }, 5000);
         }
 
