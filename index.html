@@ -33,6 +33,7 @@
             background: var(--gradient-bg);
             color: var(--text-color);
             min-height: 100vh;
+            display: block;
         }        h1 {
             text-align: center;
             margin: 0;
@@ -42,9 +43,12 @@
             width: 100%;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 0 0 10px 10px;
+            position: relative;
+            top: 0;
+            left: 0;
         }        .container {
             max-width: 700px;
-            margin: 20px auto;
+            margin: 0 auto;
             padding: 25px;
             background: linear-gradient(135deg, #FFF3E0, #FCE4EC);
             border-radius: 15px;
@@ -55,8 +59,12 @@
             text-align: center;
             font-size: 16px;
             color: #666;
-            margin: 10px 0 20px 0;
+            margin: 15px 0;
             font-weight: 500;
+        }
+
+        .main-content {
+            padding: 20px;
         }.input-section {
             display: flex;
             gap: 15px;
@@ -502,8 +510,9 @@
 
 <body>
     <h1>Enhanced To-Do List</h1>
-    <p id="currentDate"></p>
-    <div class="container">        <div class="input-section">
+    <div class="main-content">
+        <p id="currentDate"></p>
+        <div class="container"><div class="input-section">
             <div class="input-group">
                 <label class="input-label" for="taskInput">Task</label>
                 <input type="text" id="taskInput" placeholder="Enter a task">
@@ -544,8 +553,8 @@
         <ul id="taskList"></ul>
         <div id="taskHistory" style="margin-top: 30px; display: none;">
             <h2>Task History</h2>
-            <p class="empty-state">No history available yet.</p>
-        </div>
+            <p class="empty-state">No history available yet.</p>        </div>
+    </div>
     </div>
 
     <button class="theme-toggle" onclick="toggleDarkMode()">🌓</button>
