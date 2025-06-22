@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
+<head>    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhanced To-Do List</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
         :root {
             --bg-color: #fff5e6;
@@ -446,17 +448,53 @@
             z-index: 999;
             display: none;
         }
-    </style>
-    <link rel="manifest" href="manifest.json">
+    </style>    <link rel="manifest" href="manifest.json?v=1.2">
     <meta name="theme-color" content="#FF9800">    <script>
+        // App version for cache busting
+        const APP_VERSION = '1.2';
         let deferredPrompt;
         let installButton;
 
+        // Check for app updates
+        function checkForUpdates() {
+            const currentVersion = localStorage.getItem('appVersion');
+            if (currentVersion !== APP_VERSION) {
+                console.log('App updated, clearing cache...');
+                localStorage.setItem('appVersion', APP_VERSION);
+                // Clear any old cached data if needed
+                if ('caches' in window) {
+                    caches.keys().then(cacheNames => {
+                        cacheNames.forEach(cacheName => {
+                            if (cacheName.includes('todo-cache') && !cacheName.includes(APP_VERSION)) {
+                                caches.delete(cacheName);
+                            }
+                        });
+                    });
+                }
+            }
+        }
+
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(() => console.log('Service Worker Registered'))
+            navigator.serviceWorker.register(`service-worker.js?v=${APP_VERSION}`)
+                .then((registration) => {
+                    console.log('Service Worker Registered');
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New content is available, refresh the page
+                                window.location.reload();
+                            }
+                        });
+                    });
+                })
                 .catch(err => console.error('Service Worker Registration Failed:', err));
         }
+
+        // Check for updates on page load
+        checkForUpdates();
 
         // PWA Install prompt handling
         window.addEventListener('beforeinstallprompt', (e) => {
